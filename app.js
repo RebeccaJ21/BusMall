@@ -12,7 +12,9 @@ var ulEl = document.getElementById('results');
 
 var names = [];
 
+var productVotes = [];
 
+//Constructer function Product
 function Product(filepath, name) {
   this.filepath = filepath;
   this.name = name;
@@ -22,7 +24,7 @@ function Product(filepath, name) {
   Product.allProducts.push(this);
   names.push(this.name);
 }
-
+//All Products with paramaters (filepath and name)
 new Product('img/bag.jpg', 'R2D2 BAG');
 new Product('img/banana.jpg', 'Banana Slicer');
 new Product('img/bathroom.jpg', 'Toliet Paper Holder');
@@ -44,22 +46,23 @@ new Product('img/usb.gif', 'USB');
 new Product('img/water-can.jpg', 'Water-Can');
 new Product ('img/wine-glass.jpg','Wine-Glass');
 
+//Creating access to each image
 var leftEl = document.getElementById('left');
 var centerEl = document.getElementById('center');
 var rightEl = document.getElementById('right');
 
-
+//Making the images that appear random
 function randomProduct() {
-  var randomLeft = Math.round(Math.random() * Product.allProducts.length);
-  var randomCenter = Math.round(Math.random() * Product.allProducts.length);
-  var randomRight = Math.round(Math.random() * Product.allProducts.length);
+  var randomLeft = Math.floor(Math.random() * Product.allProducts.length);
+  var randomCenter = Math.floor(Math.random() * Product.allProducts.length);
+  var randomRight = Math.floor(Math.random() * Product.allProducts.length);
 
-
-  while(randomLeft === randomRight || randomLeft === randomCenter || randomRight === randomCenter || Product.allProducts.includes(randomLeft) || Product.allProducts.includes(randomCenter) || Product.allProducts.includes(randomRight)) {
+  //Insuring that the same picture doesn't occur on the page at the same time or repeating after itself
+  while(randomLeft === randomRight || randomLeft === randomCenter || randomRight === randomCenter || Product.lastDisplayed.includes(randomLeft) || Product.lastDisplayed.includes(randomCenter) || Product.lastDisplayed.includes(randomRight)) {
     console.log('Duplicate was caught');
-    randomLeft = Math.round(Math.random() * Product.allProducts.length);
-    randomCenter = Math.round(Math.random() * Product.allProducts.length);
-    randomRight = Math.round(Math.random() * Product.allProducts.length);
+    randomLeft = Math.floor(Math.random() * Product.allProducts.length);
+    randomCenter = Math.floor(Math.random() * Product.allProducts.length);
+    randomRight = Math.floor(Math.random() * Product.allProducts.length);
   }
 
   leftEl.src = Product.allProducts[randomLeft].filepath;
@@ -83,25 +86,66 @@ function randomProduct() {
 
 function handleClick(event){
   Product.totalClicks += 1;
-  console.log(event.target.alt);
   for (var i in Product.allProducts) {
     if(event.target.alt === Product.allProducts[i].name) {
       Product.allProducts[i].votes += 1;
     }
-    randomProduct();
   }
   if(Product.totalClicks > 25) {
-    Product.selectionEl.removeEventListener('click' , handleClick);
+    sectionEl.removeEventListener('click' , handleClick);
+    countVotes();
+    renderChart();
+  } else {
+    randomProduct();
   }
 }
 
-function results() {
-  for (var i in Product.allProducts) {
-    var liEl = document.createElement('li');
-    liEl.textContent = Product.allProducts[i].name + ' recived ' + Product.allProducts[i].votes + ' votes and was displayed ' + Product.allProducts.timesDisplayed + ' times.';
-    ulEl.appendChild(liEl);
+
+function countVotes() {
+  for(var i in Product.allProducts) {
+    productVotes[i] = Product.allProducts[i].votes;
   }
 }
+
+
+
+function renderChart() {
+  var context = document.getElementById('productChart').getContext('2d');
+
+  var chartColors = ['#4289f4','#8f41f4', '#4289f4','#8f41f4', '#4289f4','#8f41f4', '#4289f4','#8f41f4','#4289f4','#8f41f4','#4289f4','#8f41f4','#4289f4','#8f41f4','#4289f4','#8f41f4','#4289f4','#8f41f4','#4289f4','#8f41f4'];
+
+  var productChart = new Chart(context, {
+    type: 'bar',
+    data: {
+      labels: names,
+      datasets: [{
+        label: 'Votes Per Product',
+        data: productVotes,
+        backgroundColors: chartColors,
+      }]
+    },
+    options: {
+      scales:{
+        yAxes: [{
+          ticks:{
+            beginAtZero:true
+          }
+        }]
+      }
+    }
+  });
+}
+
+
 sectionEl.addEventListener('click', handleClick);
 
 randomProduct();
+
+
+if (window.localStorage) {
+  localStorage.clear;
+  localStorage.votes = productVotes;
+  localStorage.setItem('session', JSON.stringify(countVotes));
+  document.getElementById('Votes Per Product');
+  localStorage.getItem('results');
+}
